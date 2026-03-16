@@ -1,11 +1,771 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我们的恋爱日记与计划</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(to right, #ff9a9e, #fad0c4);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        h1 {
+            font-size: 2.0em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        /* 新增：导航栏样式 */
+        .nav-tabs {
+            display: flex;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab-link {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background-color: transparent;
+            border: none;
+            font-size: 1.1em;
+            transition: background-color 0.3s;
+        }
+
+        .tab-link.active {
+            background-color: white;
+            border-bottom: 3px solid #ff6b6b;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .tab-link:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .controls {
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        #new-entry-btn, #new-plan-btn {
+            background: linear-gradient(to right, #ff6b6b, #ff8e53);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        #new-entry-btn:hover, #new-plan-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        /* 模态对话框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: none;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalAppear 0.3s ease-out;
+        }
+
+        @keyframes modalAppear {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .modal-header {
+            margin-bottom: 15px;
+        }
+
+        .modal-body .form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-body label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .modal-body input[type="text"],
+        .modal-body textarea,
+        .modal-body input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .modal-body textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .modal-footer {
+            text-align: right;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .modal-footer button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #save-modal-btn, #save-plan-btn {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+        }
+
+        #cancel-modal-btn, #cancel-plan-btn {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+
+        /* 九宫格图片容器样式 */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            grid-auto-rows: 100px;
+            gap: 5px;
+            margin: 15px 0;
+        }
+
+        .grid-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        /* 日记条目样式 */
+        .entry {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #ff9a9e;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .entry-title {
+            font-size: 1.5em;
+            color: #2c3e50;
+        }
+
+        .entry-date {
+            font-size: 0.85em;
+            color: #7f8c8d;
+        }
+
+        .entry-text {
+            line-height: 1.6;
+            color: #34495e;
+            white-space: pre-wrap;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        /* 计划条目样式 */
+        .plan-item {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #a29bfe;
+            animation: fadeIn 0.5s ease-out;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .plan-content {
+            flex-grow: 1;
+        }
+
+        .plan-text {
+            font-size: 1.2em;
+            color: #34495e;
+        }
+
+        .plan-completed {
+            text-decoration: line-through;
+            color: #95a5a6;
+        }
+
+        .plan-date {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .plan-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-status-btn {
+            background-color: #00b894;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .toggle-status-btn.completed {
+            background-color: #6c5ce7;
+        }
+
+        .delete-plan-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>💕 恋爱日记 💕</h1>
+            <p class="subtitle">记录甜蜜瞬间，规划美好未来</p>
+        </header>
+
+        <!-- 新增：导航栏 -->
+        <div class="nav-tabs">
+            <button class="tab-link active" data-tab="diary-tab">恋爱情书</button>
+            <button class="tab-link" data-tab="plan-tab">恋爱计划</button>
+        </div>
+
+        <!-- 恋爱日记标签页 -->
+        <div id="diary-tab" class="tab-content active">
+            <div class="controls">
+                <button id="new-entry-btn">➕ 发布新记录</button>
+            </div>
+            <div class="entries" id="entries-container">
+                <div class="empty-message" id="empty-diary-message">还没有任何日记记录，快点击上方按钮添加第一个甜蜜瞬间吧！</div>
+            </div>
+        </div>
+
+        <!-- 恋爱计划标签页 -->
+        <div id="plan-tab" class="tab-content">
+            <div class="controls">
+                <button id="new-plan-btn">➕ 添加新计划</button>
+            </div>
+            <div class="plans" id="plans-container">
+                <div class="empty-message" id="empty-plan-message">还没有任何恋爱计划，快点击上方按钮添加第一个愿望清单吧！</div>
+            </div>
+        </div>
+
+        <!-- 日记编辑模态框 -->
+        <div id="entryModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close" data-modal="entryModal">&times;</span>
+                    <h2>📝 编辑新记录</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="modal-title">标题</label>
+                        <input type="text" id="modal-title" placeholder="例如：浪漫的海边之旅">
+                    </div>
+                    <div class="form-group">
+                        <label for="modal-content">想说的话</label>
+                        <textarea id="modal-content" placeholder="详细描述今天发生的事情..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="modal-images">上传照片 (可多选)</label>
+                        <input type="file" id="modal-images" accept="image/*" multiple>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-modal-btn" data-modal="entryModal">取消</button>
+                    <button id="save-modal-btn">💾 保存记录</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 计划编辑模态框 -->
+        <div id="planModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close" data-modal="planModal">&times;</span>
+                    <h2>📋 添加新计划</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="modal-plan-text">计划内容</label>
+                        <textarea id="modal-plan-text" placeholder="例如：一起去旅行，看极光，吃遍美食..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-plan-btn" data-modal="planModal">取消</button>
+                    <button id="save-plan-btn">✅ 添加计划</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 1. 初始化数据库 ---
+        let db;
+        const request = indexedDB.open("LoveDiaryAndPlanDB", 1);
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            // 创建日记对象仓库
+            if (!db.objectStoreNames.contains("diaryEntries")) {
+                const diaryStore = db.createObjectStore("diaryEntries", { keyPath: "id", autoIncrement: true });
+                diaryStore.createIndex("date", "date", { unique: false });
+            }
+            // 创建计划对象仓库
+            if (!db.objectStoreNames.contains("plans")) {
+                const planStore = db.createObjectStore("plans", { keyPath: "id", autoIncrement: true });
+                planStore.createIndex("date", "date", { unique: false });
+            }
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            loadEntries(); // 加载日记
+            loadPlans();   // 加载计划
+        };
+
+        request.onerror = function(event) {
+            console.error("数据库打开失败:", event.target.error);
+        };
+
+        // --- 2. 标签页切换 ---
+        document.querySelectorAll('.tab-link').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTabId = tab.getAttribute('data-tab');
+
+                // 移除所有激活状态
+                document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                // 激活当前点击的标签和内容
+                tab.classList.add('active');
+                document.getElementById(targetTabId).classList.add('active');
+            });
+        });
+
+        // --- 3. 日记功能相关 ---
+        const entryModal = document.getElementById("entryModal");
+        const newEntryBtn = document.getElementById("new-entry-btn");
+
+        newEntryBtn.onclick = function() {
+            resetModalForm();
+            entryModal.style.display = "block";
+        }
+
+        document.getElementById('save-modal-btn').addEventListener('click', async () => {
+            const title = document.getElementById('modal-title').value.trim();
+            const content = document.getElementById('modal-content').value.trim();
+            const imageFiles = Array.from(document.getElementById('modal-images').files);
+
+            if (!title && !content && imageFiles.length === 0) {
+                alert("至少要填写标题、内容或上传一张照片才能保存哦！");
+                return;
+            }
+
+            const newEntry = {
+                title: title || "无标题",
+                content: content || "",
+                date: new Date().toISOString(),
+                imageDataUrls: []
+            };
+
+            try {
+                const imageDataPromises = imageFiles.map(file => fileToDataURL(file));
+                newEntry.imageDataUrls = await Promise.all(imageDataPromises);
+            } catch (error) {
+                console.error("图片处理失败:", error);
+                alert("图片上传失败，请重试。");
+                return;
+            }
+
+            const transaction = db.transaction(["diaryEntries"], "readwrite");
+            const store = transaction.objectStore("diaryEntries");
+            const addRequest = store.add(newEntry);
+
+            addRequest.onsuccess = () => {
+                console.log("新日记条目已保存");
+                entryModal.style.display = "none";
+                loadEntries();
+            };
+
+            addRequest.onerror = (event) => {
+                console.error("保存日记失败:", event.target.error);
+            };
+        });
+
+        function loadEntries() {
+            const transaction = db.transaction(["diaryEntries"], "readonly");
+            const store = transaction.objectStore("diaryEntries");
+            const dateIndex = store.index("date");
+
+            const entriesContainer = document.getElementById('entries-container');
+            entriesContainer.innerHTML = '';
+
+            const request = dateIndex.openCursor(null, 'prev');
+
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const entry = cursor.value;
+                    const entryElement = createEntryElement(entry);
+                    entriesContainer.appendChild(entryElement);
+                    cursor.continue();
+                } else {
+                    if (entriesContainer.children.length === 0) {
+                        document.getElementById('empty-diary-message').style.display = 'block';
+                    } else {
+                        document.getElementById('empty-diary-message').style.display = 'none';
+                    }
+                }
+            };
+        }
+
+        function createEntryElement(data) {
+            const div = document.createElement('div');
+            div.className = 'entry';
+
+            const date = new Date(data.date).toLocaleString('zh-CN');
+
+            let imagesHtml = '';
+            if (data.imageDataUrls && data.imageDataUrls.length > 0) {
+                imagesHtml = '<div class="image-grid">';
+                data.imageDataUrls.forEach(imgSrc => {
+                    imagesHtml += `<img src="${imgSrc}" alt="日记配图" class="grid-image">`;
+                });
+                imagesHtml += '</div>';
+            }
+
+            div.innerHTML = `
+                <div class="entry-header">
+                    <h3 class="entry-title">${data.title}</h3>
+                    <span class="entry-date">${date}</span>
+                </div>
+                <p class="entry-text">${data.content.replace(/\n/g, '<br>')}</p>
+                ${imagesHtml}
+                <button class="delete-btn" data-id="${data.id}" data-type="diary">🗑️ 删除</button>
+            `;
+
+            div.querySelector('.delete-btn').addEventListener('click', function() {
+                const idToDelete = parseInt(this.getAttribute('data-id'));
+                deleteEntry(idToDelete);
+            });
+
+            return div;
+        }
+
+        function deleteEntry(id) {
+            if (confirm("确定要删除这条珍贵的回忆吗？此操作不可撤销。")) {
+                const transaction = db.transaction(["diaryEntries"], "readwrite");
+                const store = transaction.objectStore("diaryEntries");
+                const deleteRequest = store.delete(id);
+
+                deleteRequest.onsuccess = () => {
+                    console.log(`ID为 ${id} 的日记条目已删除`);
+                    loadEntries();
+                };
+            }
+        }
+
+        // --- 4. 计划功能相关 ---
+        const planModal = document.getElementById("planModal");
+        const newPlanBtn = document.getElementById("new-plan-btn");
+
+        newPlanBtn.onclick = function() {
+            document.getElementById('modal-plan-text').value = '';
+            planModal.style.display = "block";
+        }
+
+        document.getElementById('save-plan-btn').addEventListener('click', () => {
+            const planText = document.getElementById('modal-plan-text').value.trim();
+
+            if (!planText) {
+                alert("计划内容不能为空！");
+                return;
+            }
+
+            const newPlan = {
+                text: planText,
+                completed: false, // 默认为未完成
+                date: new Date().toISOString()
+            };
+
+            const transaction = db.transaction(["plans"], "readwrite");
+            const store = transaction.objectStore("plans");
+            const addRequest = store.add(newPlan);
+
+            addRequest.onsuccess = () => {
+                console.log("新计划已添加");
+                planModal.style.display = "none";
+                loadPlans();
+            };
+
+            addRequest.onerror = (event) => {
+                console.error("添加计划失败:", event.target.error);
+            };
+        });
+
+        function loadPlans() {
+            const transaction = db.transaction(["plans"], "readonly");
+            const store = transaction.objectStore("plans");
+            const dateIndex = store.index("date");
+
+            const plansContainer = document.getElementById('plans-container');
+            plansContainer.innerHTML = '';
+
+            const request = dateIndex.openCursor(null, 'prev');
+
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const plan = cursor.value;
+                    const planElement = createPlanElement(plan);
+                    plansContainer.appendChild(planElement);
+                    cursor.continue();
+                } else {
+                    if (plansContainer.children.length === 0) {
+                        document.getElementById('empty-plan-message').style.display = 'block';
+                    } else {
+                        document.getElementById('empty-plan-message').style.display = 'none';
+                    }
+                }
+            };
+        }
+
+        function createPlanElement(data) {
+            const div = document.createElement('div');
+            div.className = 'plan-item';
+
+            const date = new Date(data.date).toLocaleDateString('zh-CN');
+
+            div.innerHTML = `
+                <div class="plan-content">
+                    <p class="plan-text ${data.completed ? 'plan-completed' : ''}">${data.text}</p>
+                    <p class="plan-date">${date}</p>
+                </div>
+                <div class="plan-actions">
+                    <button class="toggle-status-btn ${data.completed ? 'completed' : ''}" data-id="${data.id}">
+                        ${data.completed ? '✅ 已完成' : '⏳ 未完成'}
+                    </button>
+                    <button class="delete-plan-btn" data-id="${data.id}">🗑️</button>
+                </div>
+            `;
+
+            div.querySelector('.toggle-status-btn').addEventListener('click', function() {
+                const idToToggle = parseInt(this.getAttribute('data-id'));
+                togglePlanStatus(idToToggle);
+            });
+
+            div.querySelector('.delete-plan-btn').addEventListener('click', function() {
+                const idToDelete = parseInt(this.getAttribute('data-id'));
+                deletePlan(idToDelete);
+            });
+
+            return div;
+        }
+
+        function togglePlanStatus(id) {
+            const transaction = db.transaction(["plans"], "readwrite");
+            const store = transaction.objectStore("plans");
+            const getRequest = store.get(id);
+
+            getRequest.onsuccess = () => {
+                const plan = getRequest.result;
+                plan.completed = !plan.completed; // 反转状态
+
+                const updateRequest = store.put(plan);
+                updateRequest.onsuccess = () => {
+                    console.log(`ID为 ${id} 的计划状态已更新`);
+                    loadPlans(); // 重新加载以反映更改
+                };
+            };
+        }
+
+        function deletePlan(id) {
+            if (confirm("确定要删除这个计划吗？")) {
+                const transaction = db.transaction(["plans"], "readwrite");
+                const store = transaction.objectStore("plans");
+                const deleteRequest = store.delete(id);
+
+                deleteRequest.onsuccess = () => {
+                    console.log(`ID为 ${id} 的计划已删除`);
+                    loadPlans();
+                };
+            }
+        }
+
+        // --- 5. 通用模态框关闭功能 ---
+        document.querySelectorAll('.close, [id^="cancel"]').forEach(element => {
+            element.addEventListener('click', function() {
+                const modalId = this.getAttribute('data-modal');
+                document.getElementById(modalId).style.display = "none";
+            });
+        });
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+
+        function resetModalForm() {
+            document.getElementById('modal-title').value = '';
+            document.getElementById('modal-content').value = '';
+            document.getElementById('modal-images').value = '';
+        }
+
+        // --- 6. 工具函数 ---
+        function fileToDataURL(file) {
+            const maxSizeInMB = 5;
+            const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
+
+            if (file && file.size > maxSizeInBytes) {
+                const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                alert(`图片文件过大！请选择小于 ${maxSizeInMB} MB 的文件。当前文件大小: ${fileSizeInMB} MB`);
+                return Promise.reject(new Error("文件过大"));
+            }
+
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+    </script>
+
+</body>
 </html>
